@@ -14,6 +14,7 @@ import { useState } from "react";
 import { Dialog } from "../../components/ui/dialog"
 import Modal from "../../components/Modal";
 import CompletedModal from "../../components/CompletedModal";
+import { toast } from "react-toastify";
 
 const JobCardDetail = () => {
   const { id } = useParams(); // URL'den id al
@@ -21,19 +22,47 @@ const JobCardDetail = () => {
   const { data: employees } = useFrappeGetDocList('Employee', {
     fields: ['*'],  // Tüm alanları almak için ["*"] kullanıyoruz
   });
-  console.log('Employees', employees)
   const [jobCardId, setJobCardId] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog için state
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false); // Dialog için state
   const [selectedReason, setSelectedReason] = useState("");
   const [totalCount, setTotalCount] = useState()
+  const [prevOpt, setPrevOpt] = useState()
   const { mutate } = useSWRConfig();
   const navigate = useNavigate()
 
 
   if (error) return <div>Error loading job card details</div>;
   if (!jobCard) return <div>Loading...</div>;
+
+  //****** Route Kontrol Etme  */
+
+  async function checkOperationSequence(jobCard) {
+    const workOrder = await fetchWorkOrder(jobCard.work_order);
+  
+    // İş emri içerisindeki operasyonları sırayla alıyoruz
+    const operations = workOrder.data.operations;
+    // Mevcut operasyonu ve önceki operasyonları buluyoruz
+    const currentOperation = operations.find(op => op.operation === jobCard.operation);
+    const previousOperation = operations.find(op => op.idx === currentOperation.idx - 1);
+    setPrevOpt(previousOperation?.operation)
+  
+    // Eğer önceki operasyon tamamlanmamışsa, false döndür
+    if (previousOperation && previousOperation.status !== 'Completed') {
+      return false;
+    }
+  
+    return true; // Operasyonlar sıraya uygun
+  }
+  
+  // İş emri verilerini getiren API çağrısı
+  async function fetchWorkOrder(workOrderName) {
+    const response = await fetch(`/api/resource/Work Order/${workOrderName}`);
+    const data = await response.json();
+    return data;
+  }
+  //****** Route Kontrol Etme  */
 
 
 
@@ -100,6 +129,7 @@ const JobCardDetail = () => {
         }
       );
       console.log(response.data);
+      toast.success('İş Kartı tamamlandı')
     } catch (error) {
       console.error('There was an error!', error);
     }
@@ -120,7 +150,6 @@ const JobCardDetail = () => {
   }
 
   const handleJobAction = async (jobCard) => {
-    console.log(jobCard)
     setLoading(true);
     try {
       if (jobCard.status === 'Work In Progress') {
@@ -135,6 +164,13 @@ const JobCardDetail = () => {
         console.log("Job card paused successfully.");
       } else if (jobCard.status === 'Open') {
 
+        const isSequenceValid = await checkOperationSequence(jobCard);
+
+  // Eğer önceki operasyon tamamlanmamışsa, uyarı ver ve devam etme
+  if (!isSequenceValid) {
+    toast.error(`${prevOpt } tamamlanmadan bu operasyona başlayamazsınız.`);
+    return; // Fonksiyon burada durur ve diğer kodlar çalışmaz
+  }
         const timeLogPayload = {
           job_card: jobCard.name,
           from_time: formatDateToCustomFormat(new Date().toISOString()),
@@ -155,7 +191,6 @@ const JobCardDetail = () => {
           },
           body: JSON.stringify(timeLogPayload),
         });
-
         await updateJobCardStatus(jobCard.name, { is_paused: 0, status: "Work in Progress", employee: [{ "employee": employees[0]?.name }] });
         console.log("Job card resumed successfully.");
       }
@@ -212,24 +247,25 @@ const JobCardDetail = () => {
     };
     //await updateJobCardStatus(jobCard.name, { status:"Completed",action:'Submit'});
     await updateJobLog(timeLogId, updatedPayload);
-    jobCard.total_completed_qty === jobCard.for_quantity ?
-      await submitJobCard(jobCard.name, {
-
-        run_method: "submit"
-      }) : alert('Üretileck miktar ile üretilen miktar eşit değil')
+    jobCard.total_completed_qty+totalCount === jobCard.for_quantity ?
+      await submitJobCard(jobCard.name, {run_method: "submit"})      
+      : 
+      await updateJobCardStatus(jobCard.name, { is_paused: 1, status: "On Hold" });
+      toast.warn('İş Kartının Tamamlanması için Üretilmesi gereken miktarı tamalamadınız ')
     await mutate("jobcarddetails");
   };
 
   return (
     <div>
-      <button className="bg-gray-400 py-1 px-4 rounded-md my-2 items-start" onClick={() => navigate('/jobcard')}>Job Card Listesi</button>
+     <div className="flex justify-between items-center my-2">
+     <button className="bg-gray-400 py-1 px-4 rounded-md my-2 items-start" onClick={() => navigate('/jobcard')}>Job Card Listesi</button>
       {/* Input elementi */}
       <div className="relative">
         <input
           id="text"
           name="jobcardId"
           type="text"
-          className="peer placeholder-transparent h-10 w-full  border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
+          className="peer placeholder-transparent h-10 w-full rounded-md border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
           placeholder="Scan Job Card Barcode"
           onChange={handleJobCardInput}
           value={jobCardId}
@@ -239,9 +275,10 @@ const JobCardDetail = () => {
           htmlFor="jobcardId"
           className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm"
         >
-          Job Card Id
+          İşlem
         </label>
       </div>
+     </div>
       <div className={`${!isDialogOpen && "hidden"} `}>
         <Modal isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
@@ -258,32 +295,33 @@ const JobCardDetail = () => {
           setIsCompleteDialogOpen(false);  // Modal'i kapat
         }}
         setTotalCount={setTotalCount}
-        totalCount={totalCount} />
+        totalCount={totalCount}
+        jobCard={jobCard} />
       <Table>
-        <TableCaption>A list of your projects.</TableCaption>
+        {/* <TableCaption>A list of your projects.</TableCaption> */}
         <TableHeader>
           <TableRow className="text-left">
-            <TableHead className="w-[100px]">ID</TableHead>
+            <TableHead className="w-[100px]">İş Kartı No</TableHead>
             <TableHead>BOM No</TableHead>
-            <TableHead>Item Name</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Ürün Adı</TableHead>
+            <TableHead>Durum</TableHead>
             <TableHead>Üretilecek Miktar</TableHead>
             <TableHead>Üretilen Miktar</TableHead>
-            <TableHead>Expected Start</TableHead>
-            <TableHead>Expected Finish</TableHead>
+            {/* <TableHead>Expected Start</TableHead> */}
+            {/* <TableHead>Expected Finish</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow key={jobCard.name} className="text-left">
-            <TableCell className="font-medium">{jobCard.name}</TableCell>
+          <TableRow key={jobCard.name} className={`${jobCard.status==="On Hold"?'bg-yellow-400':jobCard.status==='Completed'?'bg-green-400':'bg-blue-400'} text-left`}>
+            <TableCell className="font-medium min-w-40">{jobCard.name}</TableCell>
             <TableCell>{jobCard.bom_no}</TableCell>
             <TableCell>{jobCard.item_name}</TableCell>
 
             <TableCell>{jobCard.status}</TableCell>
             <TableCell>{jobCard.for_quantity}</TableCell>
             <TableCell>{jobCard.total_completed_qty}</TableCell>
-            <TableCell>{jobCard.expected_start_date}</TableCell>
-            <TableCell>{jobCard.expected_end_date}</TableCell>
+            {/* <TableCell>{jobCard.expected_start_date}</TableCell> */}
+            {/* <TableCell>{jobCard.expected_end_date}</TableCell> */}
             <TableCell>
               <div className="flex gap-2 itemx-center">
                 <button
@@ -311,7 +349,7 @@ const JobCardDetail = () => {
         </TableBody>
       </Table>
 
-      <TimeLogs className="mt-10" times={jobCard?.time_logs} employee={jobCard?.employee[0]?.employee} />
+      {/* <TimeLogs className="mt-10" times={jobCard?.time_logs} employee={jobCard?.employee[0]?.employee} /> */}
     </div>
   );
 };

@@ -127,9 +127,9 @@ export const JobCards = () => {
   return (
     <div className="p-2">
       <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-3xl">
-        Projects
+        <span className="text-red-600">{user?.custom_workstation}</span> İstasyonu İş Kartları Listesi
       </h1>
-      <div>
+      {/* <div>
         Logged in as {currentUser}
         <div className="w-full flex justify-center">
           <button
@@ -139,7 +139,7 @@ export const JobCards = () => {
             <span>Logout</span>
           </button>
         </div>
-      </div>
+      </div> */}
       <div className="flex justify-between my-4">
         <div className="relative">
           <input
@@ -155,7 +155,7 @@ export const JobCards = () => {
             htmlFor="jobcardId"
             className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm"
           >
-            Job Card Id
+            İş Kartı No'yu tarat
           </label>
         </div>
         <Pagination
@@ -166,30 +166,30 @@ export const JobCards = () => {
       </div>
 
       <Table>
-        <TableCaption>A list of your projects.</TableCaption>
+        {/*<TableCaption>A list of your projects.</TableCaption>*/}
         <TableHeader>
           <TableRow className="text-left">
-            <TableHead className="w-[100px]">ID</TableHead>
+            <TableHead className="w-[100px]">İş Katrı No</TableHead>
             <TableHead>BOM No</TableHead>
-            <TableHead>Item Name</TableHead>
-            <TableHead>Workstation</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Expected Start</TableHead>
-            <TableHead>Expected Finish</TableHead>
+            <TableHead>Ürün Adı</TableHead>
+            <TableHead>İstasyon</TableHead>
+            <TableHead>Durum</TableHead>
+            {/* <TableHead>Expected Start</TableHead> */}
+            {/* <TableHead>Expected Finish</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {jobCards?.map((project) => {
             return (
-              <TableRow key={project.name} className="text-left">
-                <TableCell className="font-medium">{project.name}</TableCell>
+              <TableRow key={project.name} className={`${project.status==="On Hold"?'bg-yellow-400':project.status==='Completed'?'bg-green-400':project.status==='Work In Progress'?'bg-orange-400':'bg-blue-400'} text-left`}>
+                <TableCell className="font-medium w-36">{project.name}</TableCell>
                 <TableCell>{project.bom_no}</TableCell>
                 <TableCell>{project.item_name}</TableCell>
                 <TableCell>{project.workstation}</TableCell>
                 <TableCell>{project.status}</TableCell>
                 
-                <TableCell>{project.expected_start_date}</TableCell>
-                <TableCell>{project.expected_end_date}</TableCell>
+                {/* <TableCell>{project.expected_start_date}</TableCell> */}
+                {/* <TableCell>{project.expected_end_date}</TableCell> */}
               </TableRow>
             );
           })}

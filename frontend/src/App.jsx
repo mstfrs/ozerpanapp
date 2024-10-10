@@ -3,13 +3,14 @@ import { FrappeProvider } from 'frappe-react-sdk'
 
 import { Outlet } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify';
-
+import 'react-toastify/dist/ReactToastify.css';
+import Header from './components/Header';
 
 function App() {
 
 
 	return (
-		<div className="App">
+		<div className="App ">
 			<FrappeProvider
 				siteName={import.meta.env.VITE_SITE_NAME}
 				socketPort={import.meta.env.VITE_SOCKET_PORT}
@@ -20,7 +21,7 @@ function App() {
 					//token:()=>'api_key:api_secret'
 				}}
 			>
-
+<Header/>
 				<Outlet />
 				<ToastContainer />
 			</FrappeProvider>

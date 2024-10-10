@@ -1,6 +1,20 @@
-const CompletedModal = ({ isOpen, onClose, onConfirm ,totalCount,setTotalCount}) => {
+const CompletedModal = ({ isOpen, onClose, onConfirm ,totalCount,setTotalCount,jobCard}) => {
     if (!isOpen) return null;
-  
+  const maxCount=(jobCard?.for_quantity)-(jobCard?.total_completed_qty)
+  console.log(maxCount)
+
+  const handleInputChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    // Eğer girilen değer maxCount'u aşarsa, maxCount değerini ata
+    if (value > maxCount) {
+      setTotalCount(maxCount);
+    } else if (value < 0) {
+      // Negatif değer girilmesini engelle
+      setTotalCount(0);
+    } else {
+      setTotalCount(value);
+    }
+  };
     return (
       <div className="fixed inset-0 z-40 min-h-full overflow-y-auto overflow-x-hidden transition flex items-center">
         <div aria-hidden="true" className="fixed inset-0 w-full h-full bg-black/50 cursor-pointer" onClick={onClose}></div>
@@ -17,7 +31,7 @@ const CompletedModal = ({ isOpen, onClose, onConfirm ,totalCount,setTotalCount})
               <div aria-hidden="true" className="border-t dark:border-gray-700 px-2">
                 <div className="mt-4">
                   <label htmlFor="count" className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">Üretilen Miktarı Giriniz</label>
-                  <input className="border-4" name="count" value={totalCount} onChange={(e)=>setTotalCount(e.target.value)}/>
+                  <input className="border-4" name="count" type="number" max={maxCount} value={totalCount} onChange={handleInputChange}/>
                 </div>
               </div>
   
