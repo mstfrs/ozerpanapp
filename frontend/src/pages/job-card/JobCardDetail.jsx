@@ -40,22 +40,22 @@ const JobCardDetail = () => {
 
   async function checkOperationSequence(jobCard) {
     const workOrder = await fetchWorkOrder(jobCard.work_order);
-  
+
     // İş emri içerisindeki operasyonları sırayla alıyoruz
     const operations = workOrder.data.operations;
     // Mevcut operasyonu ve önceki operasyonları buluyoruz
     const currentOperation = operations.find(op => op.operation === jobCard.operation);
     const previousOperation = operations.find(op => op.idx === currentOperation.idx - 1);
     setPrevOpt(previousOperation?.operation)
-  
+
     // Eğer önceki operasyon tamamlanmamışsa, false döndür
     if (previousOperation && previousOperation.status !== 'Completed') {
       return false;
     }
-  
+
     return true; // Operasyonlar sıraya uygun
   }
-  
+
   // İş emri verilerini getiren API çağrısı
   async function fetchWorkOrder(workOrderName) {
     const response = await fetch(`/api/resource/Work Order/${workOrderName}`);
@@ -166,11 +166,11 @@ const JobCardDetail = () => {
 
         const isSequenceValid = await checkOperationSequence(jobCard);
 
-  // Eğer önceki operasyon tamamlanmamışsa, uyarı ver ve devam etme
-  if (!isSequenceValid) {
-    toast.error(`${prevOpt } tamamlanmadan bu operasyona başlayamazsınız.`);
-    return; // Fonksiyon burada durur ve diğer kodlar çalışmaz
-  }
+        // Eğer önceki operasyon tamamlanmamışsa, uyarı ver ve devam etme
+        if (!isSequenceValid) {
+          toast.error(`${prevOpt} tamamlanmadan bu operasyona başlayamazsınız.`);
+          return; // Fonksiyon burada durur ve diğer kodlar çalışmaz
+        }
         const timeLogPayload = {
           job_card: jobCard.name,
           from_time: formatDateToCustomFormat(new Date().toISOString()),
@@ -247,38 +247,38 @@ const JobCardDetail = () => {
     };
     //await updateJobCardStatus(jobCard.name, { status:"Completed",action:'Submit'});
     await updateJobLog(timeLogId, updatedPayload);
-    jobCard.total_completed_qty+totalCount === jobCard.for_quantity ?
-      await submitJobCard(jobCard.name, {run_method: "submit"})      
-      : 
+    jobCard.total_completed_qty + totalCount === jobCard.for_quantity ?
+      await submitJobCard(jobCard.name, { run_method: "submit" })
+      :
       await updateJobCardStatus(jobCard.name, { is_paused: 1, status: "On Hold" });
-      toast.warn('İş Kartının Tamamlanması için Üretilmesi gereken miktarı tamalamadınız ')
+    toast.warn('İş Kartının Tamamlanması için Üretilmesi gereken miktarı tamalamadınız ')
     await mutate("jobcarddetails");
   };
 
   return (
     <div>
-     <div className="flex justify-between items-center my-2">
-     <button className="bg-gray-400 py-1 px-4 rounded-md my-2 items-start" onClick={() => navigate('/jobcard')}>Job Card Listesi</button>
-      {/* Input elementi */}
-      <div className="relative">
-        <input
-          id="text"
-          name="jobcardId"
-          type="text"
-          className="peer placeholder-transparent h-10 w-full rounded-md border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
-          placeholder="Scan Job Card Barcode"
-          onChange={handleJobCardInput}
-          value={jobCardId}
-          disabled={loading} // İşlem sırasında input devre dışı
-        />
-        <label
-          htmlFor="jobcardId"
-          className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm"
-        >
-          İşlem
-        </label>
+      <div className="flex justify-between items-center my-2">
+        <button className="bg-gray-400 py-1 px-4 rounded-md my-2 items-start" onClick={() => navigate('/jobcard')}>Job Card Listesi</button>
+        {/* Input elementi */}
+        {/* <div className="relative">
+          <input
+            id="text"
+            name="jobcardId"
+            type="text"
+            className="peer placeholder-transparent h-10 w-full rounded-md border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
+            placeholder="Scan Job Card Barcode"
+            onChange={handleJobCardInput}
+            value={jobCardId}
+            disabled={loading} // İşlem sırasında input devre dışı
+          />
+          <label
+            htmlFor="jobcardId"
+            className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm"
+          >
+            İşlem
+          </label>
+        </div> */}
       </div>
-     </div>
       <div className={`${!isDialogOpen && "hidden"} `}>
         <Modal isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
@@ -312,7 +312,7 @@ const JobCardDetail = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow key={jobCard.name} className={`${jobCard.status==="On Hold"?'bg-yellow-400':jobCard.status==='Completed'?'bg-green-400':'bg-blue-400'} text-left`}>
+          <TableRow key={jobCard.name} className={`${jobCard.status === "On Hold" ? 'bg-yellow-400' : jobCard.status === 'Completed' ? 'bg-green-400' : 'bg-blue-400'} text-left`}>
             <TableCell className="font-medium min-w-40">{jobCard.name}</TableCell>
             <TableCell>{jobCard.bom_no}</TableCell>
             <TableCell>{jobCard.item_name}</TableCell>
@@ -322,7 +322,7 @@ const JobCardDetail = () => {
             <TableCell>{jobCard.total_completed_qty}</TableCell>
             {/* <TableCell>{jobCard.expected_start_date}</TableCell> */}
             {/* <TableCell>{jobCard.expected_end_date}</TableCell> */}
-            <TableCell>
+            {/* <TableCell>
               <div className="flex gap-2 itemx-center">
                 <button
                   className={`px-4 py-1 rounded-lg ${jobCard?.status === "On Hold" ? "bg-green-300" : jobCard?.status === "Work In Progress" ? "bg-red-300" : "bg-blue-300"}`}
@@ -344,10 +344,34 @@ const JobCardDetail = () => {
               </div>
 
 
-            </TableCell>
+            </TableCell> */}
           </TableRow>
         </TableBody>
       </Table>
+      <div className="flex items-center justify-around">
+        <div className="flex-1">
+          <img src="/product.png" alt="" />
+        </div>      <div className=" flex-1 flex flex-col justify-start full gap-2 items-center">
+          <button
+            className={`h-20 w-80 text-3xl px-4 py-1 rounded-lg ${jobCard?.status === "On Hold" ? "bg-green-300" : jobCard?.status === "Work In Progress" ? "bg-red-300" : "bg-blue-300"}`}
+            onClick={() => jobCard.status === "Work In Progress" ? setIsDialogOpen(true) : handleJobAction(jobCard)}
+            disabled={loading} // Loading durumunda buton devre dışı
+          >
+            {loading ? "Loading..." : jobCard?.status === "On Hold" ? "Devam Et" : jobCard?.status === "Work In Progress" ? "Durdur" : "Başlat"}
+          </button>
+
+
+          <button
+            className={`h-20 w-80 text-3xl  px-4 py-1 rounded-lg bg-blue-300 disabled:opacity-60`}
+            onClick={() => setIsCompleteDialogOpen(true)}
+            disabled={loading||jobCard?.status === "Completed"||jobCard?.status === "Open"||jobCard?.status === "On Hold"} // Loading durumunda buton devre dışı
+          >
+            {loading ? "Yükleniyor..." : "Tamamla"}
+          </button>
+
+        </div>
+      </div>
+
 
       {/* <TimeLogs className="mt-10" times={jobCard?.time_logs} employee={jobCard?.employee[0]?.employee} /> */}
     </div>

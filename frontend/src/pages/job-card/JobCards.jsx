@@ -14,10 +14,11 @@ import Pagination from "../../components/common/Pagination";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../useAuthStore";
+import { fetchCurrentUser } from "../../services/UserService";
 
 export const JobCards = () => {
   const [pageLimitStart, setPageLimitStart] = useState(0);
-  const { currentUser, logout } = useFrappeAuth();
+  // const { currentUser, logout } = useFrappeAuth();
   const [jobCardId, setJobCardId] = useState(""); // input alanı için state
   const [jobCards, setJobCards] = useState([]); // jobCards state'i
   const [isUserLoaded, setIsUserLoaded] = useState(false); // Kullanıcı bilgisi yüklendi mi?
@@ -25,6 +26,7 @@ export const JobCards = () => {
   const setUser = useAuthStore((state) => state.setUser); // Store'dan setUser fonksiyonunu alıyoruz
   const user = useAuthStore((state) => state.user);
   const [loggedEmployee, setLoggedEmployee] = useState()
+  const [currentUser, setCurrentUser] = useState()
 
   // Job Card verilerini al
   const getJobCards = async () => {
@@ -104,7 +106,12 @@ export const JobCards = () => {
 
   useEffect(() => {
     getLoggedUserEmployeeDetails();
-  }, []);
+    fetchCurrentUser().then((currentUsr) => {
+      console.log("Mevcut Kullanıcı:", currentUsr);
+      setCurrentUser(currentUsr)
+
+  });
+  }, [currentUser]);
 
   useEffect(() => {
     if (isUserLoaded) {
