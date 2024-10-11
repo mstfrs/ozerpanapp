@@ -1,20 +1,18 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  useFrappeAuth,
-} from "frappe-react-sdk";
+
 import Pagination from "../../components/common/Pagination";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../useAuthStore";
 import { fetchCurrentUser } from "../../services/UserService";
+import { useFrappeAuth } from "frappe-react-sdk";
 
 export const JobCards = () => {
   const [pageLimitStart, setPageLimitStart] = useState(0);
@@ -25,8 +23,10 @@ export const JobCards = () => {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser); // Store'dan setUser fonksiyonunu alıyoruz
   const user = useAuthStore((state) => state.user);
-  const [loggedEmployee, setLoggedEmployee] = useState()
+  // const [loggedEmployee, setLoggedEmployee] = useState()
   const [currentUser, setCurrentUser] = useState()
+  const {logout}=useFrappeAuth()
+
 
   // Job Card verilerini al
   const getJobCards = async () => {
@@ -96,7 +96,7 @@ export const JobCards = () => {
 
       const employeeDetails = await detailsResponse.json();
       setUser(employeeDetails.data);
-      setLoggedEmployee(employeeDetails.data);
+      // setLoggedEmployee(employeeDetails.data);
       setIsUserLoaded(true); // Kullanıcı bilgisi yüklendi
       console.log("Employee Details:", employeeDetails.data); // Employee bilgilerini konsola yazdır
     } catch (error) {
@@ -136,6 +136,14 @@ export const JobCards = () => {
       <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-3xl">
         <span className="text-red-600">{user?.custom_workstation}</span> İstasyonu İş Kartları Listesi
       </h1>
+      <button
+              onClick={
+                logout
+              }
+              className="flex items-center  border border-gray-400 rounded-lg shadow-md px-6 py-1 text-sm font-medium  hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              <span>Çıkış</span>
+            </button>
       {/* <div>
         Logged in as {currentUser}
         <div className="w-full flex justify-center">
@@ -162,7 +170,7 @@ export const JobCards = () => {
             htmlFor="jobcardId"
             className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm"
           >
-            İş Kartı No'yu tarat
+            İş Kartı Noyu tarat
           </label>
         </div>
         <Pagination

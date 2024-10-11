@@ -21,9 +21,10 @@ function App() {
 					//token:()=>'api_key:api_secret'
 				}}
 			>
-<Header/>
+{/* <Header/> */}
 				<Outlet />
-				<ToastContainer />
+				<ToastContainer 
+				position="top-center"/>
 			</FrappeProvider>
 		</div>
 	)

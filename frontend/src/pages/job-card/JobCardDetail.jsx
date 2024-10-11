@@ -1,17 +1,14 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useFrappeGetDoc, useFrappeGetDocList, useSWRConfig } from "frappe-react-sdk";
+import { useFrappeAuth, useFrappeGetDoc, useFrappeGetDocList, useSWRConfig } from "frappe-react-sdk";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import TimeLogs from "../../components/job-card/TimeLogs";
 import { useState } from "react";
-import { Dialog } from "../../components/ui/dialog"
 import Modal from "../../components/Modal";
 import CompletedModal from "../../components/CompletedModal";
 import { toast } from "react-toastify";
@@ -22,7 +19,6 @@ const JobCardDetail = () => {
   const { data: employees } = useFrappeGetDocList('Employee', {
     fields: ['*'],  // Tüm alanları almak için ["*"] kullanıyoruz
   });
-  const [jobCardId, setJobCardId] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog için state
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false); // Dialog için state
@@ -31,6 +27,7 @@ const JobCardDetail = () => {
   const [prevOpt, setPrevOpt] = useState()
   const { mutate } = useSWRConfig();
   const navigate = useNavigate()
+  const {logout}=useFrappeAuth()
 
 
   if (error) return <div>Error loading job card details</div>;
@@ -185,9 +182,10 @@ const JobCardDetail = () => {
 
         await fetch("http://localhost:8001/api/resource/Job Card Time Log", {
           method: "POST",
+          credentials:'include',
           headers: {
             "Content-Type": "application/json",
-            Authorization: `token 6d76e6b39cc7a4d:f63543ae0fad40f`,
+            //Authorization: `token 6d76e6b39cc7a4d:f63543ae0fad40f`,
           },
           body: JSON.stringify(timeLogPayload),
         });
@@ -209,9 +207,10 @@ const JobCardDetail = () => {
 
         await fetch("http://localhost:8001/api/resource/Job Card Time Log", {
           method: "POST",
+          credentials:'include',
           headers: {
             "Content-Type": "application/json",
-            Authorization: `token 6d76e6b39cc7a4d:f63543ae0fad40f`,
+            //Authorization: `token 6d76e6b39cc7a4d:f63543ae0fad40f`,
           },
           body: JSON.stringify(timeLogPayload),
         });
@@ -227,14 +226,14 @@ const JobCardDetail = () => {
     }
   };
 
-  const handleJobCardInput = (e) => {
-    setJobCardId(e.target.value);
+  // const handleJobCardInput = (e) => {
+  //   setJobCardId(e.target.value);
 
-    if (e.target.value.toLowerCase() === "pause") {
-      handleJobAction(jobCard);
-      setJobCardId("")
-    }
-  };
+  //   if (e.target.value.toLowerCase() === "pause") {
+  //     handleJobAction(jobCard);
+  //     setJobCardId("")
+  //   }
+  // };
   const handleJobComplete = async (jobCard) => {
     const timeLogId = jobCard.time_logs[jobCard.time_logs.length - 1].name;
     const updatedPayload = {
@@ -259,6 +258,15 @@ const JobCardDetail = () => {
     <div>
       <div className="flex justify-between items-center my-2">
         <button className="bg-gray-400 py-1 px-4 rounded-md my-2 items-start" onClick={() => navigate('/jobcard')}>Job Card Listesi</button>
+     
+            <button
+              onClick={
+                logout
+              }
+              className="flex items-center  border border-gray-400 rounded-lg shadow-md px-6 py-1 text-sm font-medium  hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              <span>Çıkış</span>
+            </button>
         {/* Input elementi */}
         {/* <div className="relative">
           <input
